@@ -28,6 +28,9 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+
+# OAuth token file
+.tokens.json
 storybook-static/
 /test-results/
 /playwright-report/
