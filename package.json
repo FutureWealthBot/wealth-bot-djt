@@ -31,6 +31,7 @@
     "body-parser": "^1.20.3",
     "dotenv": "^16.4.5",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
     "googleapis": "^144.0.0",
     "pino": "^9.5.0",
     "@radix-ui/react-accordion": "^1.1.2",

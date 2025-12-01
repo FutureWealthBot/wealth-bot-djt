@@ -2,6 +2,7 @@
 require("dotenv").config()
 const express = require("express")
 const bodyParser = require("body-parser")
+const rateLimit = require("express-rate-limit")
 const pino = require("pino")
 const fs = require("fs").promises
 const { google } = require("googleapis")
@@ -9,6 +10,15 @@ const OAuthStore = require("./oauth-store")
 const EmailProcessor = require("./email-processor")
 
 const logger = pino()
+
+// Rate limiter for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // limit each IP to 10 requests per windowMs
+  message: { error: "Too many requests, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+})
 
 // env and defaults
 const {
@@ -55,7 +65,7 @@ app.use(bodyParser.json())
 app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }))
 
 // Start OAuth flow
-app.get("/auth", (req, res) => {
+app.get("/auth", authLimiter, (req, res) => {
   const scopes = (GMAIL_API_SCOPES || "").split(/\s*,\s*|\s+/).filter(Boolean)
   const url = oauth2Client.generateAuthUrl({
     access_type: "offline",
@@ -66,7 +76,7 @@ app.get("/auth", (req, res) => {
 })
 
 // OAuth callback
-app.get("/oauth2/callback", async (req, res) => {
+app.get("/oauth2/callback", authLimiter, async (req, res) => {
   try {
     const code = req.query.code
     if (!code) return res.status(400).send("Missing code parameter.")
