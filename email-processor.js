@@ -1,4 +1,7 @@
 const EventEmitter = require("events")
+const pino = require("pino")
+
+const logger = pino()
 
 /**
  * EmailProcessor - Handles email normalization and event emission
@@ -186,10 +189,10 @@ class EmailProcessor extends EventEmitter {
       })
 
       if (error) {
-        console.error("Error logging to Supabase:", error)
+        logger.error({ err: error }, "Error logging to Supabase")
       }
     } catch (err) {
-      console.error("Error logging to Supabase:", err)
+      logger.error({ err }, "Error logging to Supabase")
     }
   }
 }

@@ -3,6 +3,7 @@ require("dotenv").config()
 const express = require("express")
 const bodyParser = require("body-parser")
 const pino = require("pino")
+const fs = require("fs").promises
 const { google } = require("googleapis")
 const OAuthStore = require("./oauth-store")
 const EmailProcessor = require("./email-processor")
@@ -83,27 +84,12 @@ app.get("/oauth2/callback", async (req, res) => {
 app.post("/admin/clear-tokens", async (req, res) => {
   const adminSecret = req.headers["x-admin-secret"]
   if (!adminSecret || adminSecret !== ADMIN_JWT_SECRET) return res.status(403).json({ error: "forbidden" })
-  if (TOKEN_STORE === "file") {
-    const fs = require("fs").promises
-    try {
-      await fs.writeFile(TOKEN_STORE_FILE, JSON.stringify({}, null, 2), { mode: 0o600 })
-      return res.json({ ok: true })
-    } catch (err) {
-      logger.error({ err }, "error clearing token file")
-      return res.status(500).json({ error: "failed" })
-    }
-  } else {
-    // supabase path
-    const { data, error } = await require("@supabase/supabase-js")
-      .createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-      .from(process.env.SUPABASE_OAUTH_TABLE || "oauth_tokens")
-      .delete()
-      .eq("id", "API.LIVE")
-    if (error) {
-      logger.error({ err: error }, "failed deleting supabase token")
-      return res.status(500).json({ error: "failed" })
-    }
+  try {
+    await tokenStore.delete("API.LIVE")
     return res.json({ ok: true })
+  } catch (err) {
+    logger.error({ err }, "error clearing tokens")
+    return res.status(500).json({ error: "failed" })
   }
 })
 
