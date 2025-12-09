@@ -19,6 +19,23 @@ const eslintIgnore = [
   "*.d.ts",
 ]
 
+// Cache the directories to avoid reading filesystem repeatedly
+let cachedDirectories = null
+
+function getDirectoriesToSort() {
+  if (cachedDirectories !== null) {
+    return cachedDirectories
+  }
+  
+  const ignoredSortingDirectories = [".git", ".next", ".vscode", "node_modules"]
+  cachedDirectories = fs
+    .readdirSync(process.cwd())
+    .filter((file) => fs.statSync(process.cwd() + "/" + file).isDirectory())
+    .filter((f) => !ignoredSortingDirectories.includes(f))
+  
+  return cachedDirectories
+}
+
 const config = typescriptEslint.config(
   {
     ignores: eslintIgnore,
@@ -96,13 +113,5 @@ const config = typescriptEslint.config(
     },
   }
 )
-
-function getDirectoriesToSort() {
-  const ignoredSortingDirectories = [".git", ".next", ".vscode", "node_modules"]
-  return fs
-    .readdirSync(process.cwd())
-    .filter((file) => fs.statSync(process.cwd() + "/" + file).isDirectory())
-    .filter((f) => !ignoredSortingDirectories.includes(f))
-}
 
 export default config
