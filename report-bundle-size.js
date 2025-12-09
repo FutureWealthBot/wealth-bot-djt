@@ -99,18 +99,16 @@ function getScriptSize(scriptPath) {
   const encoding = "utf8"
   const p = path.join(nextMetaRoot, scriptPath)
 
-  let rawSize, gzipSize
-  if (Object.keys(memoryCache).includes(p)) {
-    rawSize = memoryCache[p][0]
-    gzipSize = memoryCache[p][1]
-  } else {
-    const textContent = fs.readFileSync(p, encoding)
-    rawSize = Buffer.byteLength(textContent, encoding)
-    gzipSize = gzSize.sync(textContent)
-    memoryCache[p] = [rawSize, gzipSize]
+  if (memoryCache[p]) {
+    return memoryCache[p]
   }
 
-  return [rawSize, gzipSize]
+  const textContent = fs.readFileSync(p, encoding)
+  const rawSize = Buffer.byteLength(textContent, encoding)
+  const gzipSize = gzSize.sync(textContent)
+  memoryCache[p] = [rawSize, gzipSize]
+
+  return memoryCache[p]
 }
 
 /**
